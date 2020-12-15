@@ -45,7 +45,7 @@ def weather(ack, say, command):
     try:
       location = get_location_from_zipcode(zipcode, SECRET.secrets["ZIPCODE_API_KEY"])
     except HTTPError as e:
-      messge = f"{prefix}It feels like {feels_like_f:.0f} in {zipcode}."
+      message = f"{prefix}It feels like {feels_like_f:.0f} in {zipcode}."
     else:
       city = location["city"]
       state = location["state"]
