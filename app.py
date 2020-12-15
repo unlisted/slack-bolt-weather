@@ -1,6 +1,7 @@
 import os
 from signal import signal, SIGINT
 from sys import exit
+from Secret import Secret
 from requests.exceptions import HTTPError
 from weather import get_weather_for_zipcode
 from zipcode import get_location_from_zipcode
@@ -12,10 +13,10 @@ def handler(signal_received, frame):
     print('SIGINT or CTRL-C detected. Exiting gracefully')
     exit(0)
 
-# Initializes your app with your bot token and signing secret
+SECRET = Secret.get_instance()
 app = App(
-    token=os.environ.get("SLACK_BOT_TOKEN"),
-    signing_secret=os.environ.get("SLACK_SIGNING_SECRET")
+    token=SECRET.secrets.get("SLACK_BOT_TOKEN"),
+    signing_secret=SECRET.secrets.get("SLACK_SIGNING_SECRET")
 )
   
 @app.command("/weather")
@@ -33,7 +34,7 @@ def weather(ack, say, command):
     #TODO: input validation
 
     try:
-      weather = get_weather_for_zipcode(zipcode)
+      weather = get_weather_for_zipcode(zipcode, SECRET.secrets["WEATHER_API_KEY"])
     except HTTPError as e:
       say(f"{prefix}\"{zipcode}\" is not a valid zipcode.")
       return
@@ -42,7 +43,7 @@ def weather(ack, say, command):
     feels_like_f = (feels_like_k - 273.15) * 1.8000 + 32.00
 
     try:
-      location = get_location_from_zipcode(zipcode)
+      location = get_location_from_zipcode(zipcode, SECRET.secrets["ZIPCODE_API_KEY"])
     except HTTPError as e:
       messge = f"{prefix}It feels like {feels_like_f:.0f} in {zipcode}."
     else:
@@ -58,13 +59,6 @@ def weather(ack, say, command):
                 "text": {
                     "type": "mrkdwn",
                     "text": message
-                }
-            },
-            {
-                "type": "section",
-                "text": {
-                    "type": "mrkdwn",
-                    "text": "Now go outside and play."
                 }
             }
         ]
