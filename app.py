@@ -1,3 +1,4 @@
+import logging
 import os
 from signal import signal, SIGINT
 from sys import exit
@@ -36,7 +37,8 @@ def weather(ack, say, command):
     try:
       weather = get_weather_for_zipcode(zipcode, SECRET.secrets["WEATHER_API_KEY"])
     except HTTPError as e:
-      say(f"{prefix}\"{zipcode}\" is not a valid zipcode.")
+      logging.exception("Failed to get weather for zipcode %s, %s", zipcode, e.response)
+      say(f"{prefix}\"Could not get weather for {zipcode}.\"")
       return
     
     feels_like_k = weather["main"]["feels_like"]
@@ -45,6 +47,7 @@ def weather(ack, say, command):
     try:
       location = get_location_from_zipcode(zipcode, SECRET.secrets["ZIPCODE_API_KEY"])
     except HTTPError as e:
+      logging.exception("Failed to get location from zipcode %s, %s", zipcode, e.response)
       message = f"{prefix}It feels like {feels_like_f:.0f} in {zipcode}."
     else:
       city = location["city"]
